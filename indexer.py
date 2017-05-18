@@ -9,40 +9,18 @@ import itertools
 import numpy as np
 
 
-def serialize_keypoints(keypoints, descriptors):
-    return [(kp.pt, kp.size, kp.angle, kp.response, kp.octave, kp.class_id, desc)
-            for kp, desc in zip(keypoints, descriptors)]
-
-
-def map_3d(func, iterable):
-    return list(map(lambda row: list(map(func, row)), iterable))
-
-
-def compose(*functions):
-    def inner(arg):
-        for f in reversed(functions):
-            arg = f(arg)
-        return arg
-    return inner
-
-
-bytes_descriptor_functions = [
-    bytes,
-    itertools.chain.from_iterable,
-    p(map, np.matrix.tolist),
-    p(map, np.matrix.flatten)
-]
-
-bytes_descriptor = compose(*bytes_descriptor_functions)
-
 files = sorted(os.listdir(sys.argv[1]))
-file_paths = map(p(os.path.join, sys.argv[1]), files)
+
+file_paths = list(map(p(os.path.join, sys.argv[1]), files))
+
+for f in file_paths:
+    if not os.path.isfile(f):
+        raise IOError('Cannot open file %s' % f)
 
 descriptors_by_file = list(map(get_descriptors, file_paths))
 
-bytes_descriptors_by_file = list(map(bytes_descriptor, descriptors_by_file))
-
-database = [(file, kp) for file, kp in zip(files, bytes_descriptors_by_file)]
+database = [(file, kp) for file, kp in zip(files, descriptors_by_file)]
 
 pickle.dump(database, open(sys.argv[2], 'wb'))
+
 
