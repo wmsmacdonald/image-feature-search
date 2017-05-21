@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 
 
 def get_descriptors(file):
@@ -8,5 +7,6 @@ def get_descriptors(file):
     orb = cv2.ORB_create()
 
     kp = orb.detect(img, None)
-    return orb.compute(img, kp)[1]
+    descriptors = orb.compute(img, kp)[1]
+    return descriptors
 

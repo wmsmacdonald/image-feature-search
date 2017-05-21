@@ -5,8 +5,6 @@ from functools import partial as p
 import os
 import pickle
 from get_descriptors import get_descriptors
-import itertools
-import numpy as np
 
 
 files = sorted(os.listdir(sys.argv[1]))

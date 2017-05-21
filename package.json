@@ -1,0 +1,27 @@
+{
+  "name": "image-feature-search",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "http-server",
+    "compile": "webpack js/test.js public/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wmsmacdonald/image-feature-search.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wmsmacdonald/image-feature-search/issues"
+  },
+  "homepage": "https://github.com/wmsmacdonald/image-feature-search#readme",
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "immutable": "^3.8.1",
+    "jquery": "^3.2.1",
+    "lodash": "^4.17.4",
+    "tracking": "^1.1.3"
+  }
+}
