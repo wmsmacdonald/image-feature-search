@@ -293,7 +293,7 @@ process.umask = function() { return 0; };
 // import tracking library
 __webpack_require__(10)
 
-tracking.Fast.THRESHOLD = 10
+tracking.Fast.THRESHOLD = 5
 
 function getDescriptors(imageData) {
   const grayed = tracking.Image.grayscale(imageData.data, imageData.width, imageData.height);
@@ -38320,7 +38320,6 @@ const _ = __webpack_require__(8)
 const $ = __webpack_require__(7)
 const Promise = __webpack_require__(5)
 const Immutable = __webpack_require__(6)
-const List = Immutable.List
 
 const getDescriptors = __webpack_require__(2)
 const getImageData = __webpack_require__(3)
@@ -38380,7 +38379,7 @@ function indexFrames() {
 
 
 function searchFrames() {
-  const query_dir = '/always_sunny_sample_frames/scaled_down/'
+  const query_dir = '/always_sunny_sample_frames/cropped/'
 
   return Promise.map(
     frames,

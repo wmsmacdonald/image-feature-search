@@ -5,7 +5,6 @@ const _ = require('lodash')
 const $ = require('jquery')
 const Promise = require('bluebird')
 const Immutable = require('immutable')
-const List = Immutable.List
 
 const getDescriptors = require('./get_descriptors')
 const getImageData = require('./get_image_data')

@@ -16,6 +16,13 @@ def flatten(x):
     else:
         return [x]
 
+def compose (*functions):
+    def inner(arg):
+        for f in reversed(functions):
+            arg = f(arg)
+        return arg
+    return inner
+
 
 def compute_distance(matcher, des1, des2):
     if des1 is None or des2 is None:
@@ -38,21 +45,38 @@ flannKnn = p(
                          key_size=12,
                          multi_probe_level=1),
         searchParams=dict(checks=50)
-    ).knnMatch, k=2
+    ).knnMatch, k=1
 )
 
 
-def search(query_descriptors, index_file, matcher=bf):
+def search(query_descriptors, index_file):
 
     database = pickle.load(open(index_file, 'rb'))
 
-    files, descriptors_by_file = zip(*database.items())
+    all_descriptors, partitions = database
 
-    compute_distance_matcher = p(compute_distance, matcher)
+    flann = cv2.FlannBasedMatcher(
+        indexParams=dict(algorithm=6,
+                         table_number=6,
+                         key_size=12,
+                         multi_probe_level=1),
+        searchParams=dict(checks=50)
+    )
 
-    distances_by_file = map(p(compute_distance_matcher, query_descriptors), descriptors_by_file)
+    matches = flannKnn(query_descriptors, all_descriptors)
 
-    results = sorted(zip(files, distances_by_file), key=op.itemgetter(1))
+    get_matching_file = compose(
+        partitions.get_value,
+        op.attrgetter('trainIdx'),
+        op.itemgetter(0)
+    )
+
+    votes = list(map(get_matching_file, matches))
+
+    frequencies = collections.Counter(votes).most_common()
+
+    results = sorted(frequencies, key=op.itemgetter(1))[::-1]
+
     return results
 
 
