@@ -16,7 +16,8 @@ def flatten(x):
     else:
         return [x]
 
-def compose (*functions):
+
+def compose(*functions):
     def inner(arg):
         for f in reversed(functions):
             arg = f(arg)
@@ -36,18 +37,6 @@ def compute_distance(matcher, des1, des2):
 
     return sum(map(lambda m: m.distance, top_matches)) / len(top_matches)
 
-bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True).match
-
-flannKnn = p(
-    cv2.FlannBasedMatcher(
-        indexParams=dict(algorithm=6,
-                         table_number=6,
-                         key_size=12,
-                         multi_probe_level=1),
-        searchParams=dict(checks=50)
-    ).knnMatch, k=1
-)
-
 
 def search(query_descriptors, index_file):
 
@@ -55,7 +44,7 @@ def search(query_descriptors, index_file):
 
     all_descriptors, partitions = database
 
-    flann = cv2.FlannBasedMatcher(
+    flann_matcher = cv2.FlannBasedMatcher(
         indexParams=dict(algorithm=6,
                          table_number=6,
                          key_size=12,
@@ -63,15 +52,16 @@ def search(query_descriptors, index_file):
         searchParams=dict(checks=50)
     )
 
-    matches = flannKnn(query_descriptors, all_descriptors)
+    matches = flann_matcher.knnMatch(query_descriptors, all_descriptors, k=2)
+
+    confident_matches = [m for m, n in matches if m.distance < 0.5 * n.distance]
 
     get_matching_file = compose(
         partitions.get_value,
-        op.attrgetter('trainIdx'),
-        op.itemgetter(0)
+        op.attrgetter('trainIdx')
     )
 
-    votes = list(map(get_matching_file, matches))
+    votes = list(map(get_matching_file, confident_matches))
 
     frequencies = collections.Counter(votes).most_common()
 
@@ -84,7 +74,7 @@ def search_file(file, index_file):
     if not os.path.exists(file):
         raise IOError('Cannot open file %s' % file)
 
-    query_descriptors = get_descriptors(file)
+    query_descriptors = get_descriptors(file, nfeatures=2000)
     return search(query_descriptors, index_file)
 
 if __name__ == '__main__':

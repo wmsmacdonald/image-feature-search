@@ -14,6 +14,13 @@ function getDescriptorsTrackingjs(imageData) {
   return new Uint8Array(descriptors)
 }
 
+function getDescriptorsJSFeat(imageData) {
+  const corners = []
+  const cols = 16
+  const descriptors = new jsfeat.matrix_t(cols, rows)
+}
+
 module.exports = {
-  getDescriptorsTrackingjs
+  getDescriptorsTrackingjs,
+  getDescriptorsJSFeat
 }

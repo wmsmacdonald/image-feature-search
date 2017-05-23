@@ -1,12 +1,11 @@
 import cv2
 
 
-def get_descriptors(file):
+def get_descriptors(file, nfeatures=500):
     img = cv2.imread(file, 0)
 
-    orb = cv2.ORB_create()
+    orb = cv2.ORB_create(nfeatures=nfeatures)
 
-    kp = orb.detect(img, None)
-    descriptors = orb.compute(img, kp)[1]
+    descriptors = orb.detectAndCompute(img, None)[1]
     return descriptors
 
