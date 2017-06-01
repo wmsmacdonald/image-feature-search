@@ -23,3 +23,8 @@ class Partitioned:
                 return v
         else:
             raise IndexError
+
+    def __str__(self):
+        return '\n'.join(
+            ['%s,%d' % (v, p[-1]) for v, p in zip(self.values, self.partitions)]
+        )

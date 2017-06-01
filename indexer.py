@@ -10,6 +10,7 @@ import numpy as np
 import operator as op
 
 files = sorted(os.listdir(sys.argv[1]))
+#files = ['frame003-004.jpg']
 
 file_paths = list(map(p(os.path.join, sys.argv[1]), files))
 
@@ -31,7 +32,15 @@ for descriptors, filename in zip(valid_descriptors_by_file, valid_files):
 
 all_descriptors = np.concatenate(valid_descriptors_by_file, axis=0)
 
+print('num_descriptors %d' % len(all_descriptors))
+
+#with open('./indexes/full_index', 'wb') as f:
+#    print(f.write(all_descriptors.tobytes()))
+
+#with open('./indexes/values', 'w') as f:
+#    f.write(str(partitions))
+
 database = (all_descriptors, partitions)
 
-pickle.dump(database, open(sys.argv[2], 'wb'))
+pickle.dump(database, open('./indexes/full_index.p', 'wb'))
 

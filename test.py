@@ -19,13 +19,14 @@ incorrect = 0
 
 for file, file_path in list(zip(files, file_paths)):
     results = search_file(file_path, index_file)
+    print(file, results)
     try:
         match_position = next(i for i, (matched_file, _) in enumerate(results) if matched_file == file)
         if match_position > 0:
-            print('file %s matches at results position %d' % (file_path, match_position))
+            #print('file %s matches at results position %d' % (file_path, match_position))
             incorrect += 1
     except StopIteration:
-        print('file %s has no match' % file_path)
+        #print('file %s has no match' % file_path)
         incorrect += 1
 
 print('%d errors out of %d' % (incorrect, len(files)))
