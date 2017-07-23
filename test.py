@@ -8,6 +8,7 @@ query_dir = './public/always_sunny_sample_frames/cropped/'
 index_file = './indexes/full_index.p'
 
 files = sorted(os.listdir(query_dir))
+files = ['frame029.jpg']
 
 file_paths = list(map(p(os.path.join, query_dir), files))
 

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import cv2
+from keypoint_signatures import compute_keypoint_signatures
 import pickle
 from functools import reduce, partial as p
 from itertools import islice
+import itertools
 import sys
 import numpy as np
 import os
@@ -40,11 +42,22 @@ def compute_distance(matcher, des1, des2):
     return sum(map(lambda m: m.distance, top_matches)) / len(top_matches)
 
 
-def search(query_descriptors, index_file):
+def search(query_keypoint_signatures, index_file):
 
     database = pickle.load(open(index_file, 'rb'))
 
-    all_descriptors, partitions = database
+    signatures_with_files = [(tuple(signature), file_name) for file_name, signatures
+                             in database.items() for signature in signatures]
+
+    signatures_to_files = {key: list(map(op.itemgetter(1), group)) for key, group
+                           in itertools.groupby(signatures_with_files, op.itemgetter(0))}
+
+    file_names = [file for signature in query_keypoint_signatures for file
+                  in signatures_to_files.get(tuple(signature), [])]
+    results = collections.Counter(file_names).most_common()
+
+    print(results)
+    return results
 
     flann_matcher_orb = cv2.FlannBasedMatcher(
         indexParams=dict(algorithm=6,
@@ -93,8 +106,11 @@ def search_file(file, index_file):
     if not os.path.exists(file):
         raise IOError('Cannot open file %s' % file)
 
-    query_descriptors = get_descriptors(file, nfeatures=2000)
-    return search(query_descriptors, index_file)
+    image = cv2.imread(file, 0)
+    star = cv2.xfeatures2d.StarDetector_create()
+    keypoints = star.detect(image)
+    query_keypoint_signatures = compute_keypoint_signatures(image, keypoints)
+    return search(query_keypoint_signatures, index_file)
 
 if __name__ == '__main__':
     results = search(sys.argv[1], sys.argv[2])

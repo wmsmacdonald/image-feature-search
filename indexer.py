@@ -2,6 +2,8 @@
 
 import sys
 from functools import partial as p
+from keypoint_signatures import compute_keypoint_signatures
+import cv2
 import os
 import pickle
 from get_descriptors import get_descriptors
@@ -9,8 +11,8 @@ from partitioned import Partitioned
 import numpy as np
 import operator as op
 
-files = sorted(os.listdir(sys.argv[1]))
-#files = ['frame003-004.jpg']
+files = sorted(os.listdir(sys.argv[1]))[0:30]
+#files = ['thumb0025.jpg']
 
 file_paths = list(map(p(os.path.join, sys.argv[1]), files))
 
@@ -19,28 +21,17 @@ for f in file_paths:
         raise IOError('Cannot open file %s' % f)
 
 
-descriptors_by_file = list(map(get_descriptors, file_paths))
+def signatures(file_path):
+    image = cv2.imread(file_path, 0)
+    star = cv2.xfeatures2d.StarDetector_create()
+    keypoints = star.detect(image)
+    keypoint_signatures = compute_keypoint_signatures(image, keypoints)
+    print(keypoint_signatures)
+    return keypoint_signatures
 
-valid_descriptors_by_file, valid_files = zip(*[(descriptors, file)
-                                               for descriptors, file
-                                               in zip(descriptors_by_file, files)
-                                               if descriptors is not None])
-partitions = Partitioned()
+keypoint_signatures_by_file = list(map(signatures, file_paths))
 
-for descriptors, filename in zip(valid_descriptors_by_file, valid_files):
-    partitions.add_partition(len(descriptors), filename)
-
-all_descriptors = np.concatenate(valid_descriptors_by_file, axis=0)
-
-print('num_descriptors %d' % len(all_descriptors))
-
-#with open('./indexes/full_index', 'wb') as f:
-#    print(f.write(all_descriptors.tobytes()))
-
-#with open('./indexes/values', 'w') as f:
-#    f.write(str(partitions))
-
-database = (all_descriptors, partitions)
+database = dict(zip(file_paths, keypoint_signatures_by_file))
 
 pickle.dump(database, open('./indexes/full_index.p', 'wb'))
 

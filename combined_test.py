@@ -21,7 +21,7 @@ with open('./public/always_sunny_sample_frames/medq_keyframes.txt', 'r') as f:
     thumb_times = list(map(int, map(float, f.readlines())))
 
 files = sorted(os.listdir(query_dir))
-#files = ['frame001-002.jpg']
+files = ['frame001-002.jpg']
 
 file_paths = list(map(p(os.path.join, query_dir), files))
 
