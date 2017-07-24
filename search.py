@@ -44,60 +44,12 @@ def compute_distance(matcher, des1, des2):
 
 def search(query_keypoint_signatures, index_file):
 
-    database = pickle.load(open(index_file, 'rb'))
-
-    signatures_with_files = [(tuple(signature), file_name) for file_name, signatures
-                             in database.items() for signature in signatures]
-
-    signatures_to_files = {key: list(map(op.itemgetter(1), group)) for key, group
-                           in itertools.groupby(signatures_with_files, op.itemgetter(0))}
+    signatures_to_file_groups = pickle.load(open(index_file, 'rb'))
 
     file_names = [file for signature in query_keypoint_signatures for file
-                  in signatures_to_files.get(tuple(signature), [])]
+                  in signatures_to_file_groups.get(tuple(signature), [])]
+
     results = collections.Counter(file_names).most_common()
-
-    print(results)
-    return results
-
-    flann_matcher_orb = cv2.FlannBasedMatcher(
-        indexParams=dict(algorithm=6,
-                         table_number=6,
-                         key_size=12,
-                         multi_probe_level=1),
-        searchParams=dict(checks=50)
-    )
-
-    flann_matcher_sift = cv2.FlannBasedMatcher(
-        indexParams=dict(algorithm=0,
-                         trees = 5),
-        searchParams=dict(checks=50)
-    )
-
-    matches = flann_matcher_orb.knnMatch(query_descriptors, all_descriptors, k=2)
-
-    def avg(iter):
-        return sum(iter) / len(iter)
-
-    get_first_distance = compose(op.attrgetter('distance'), op.itemgetter(0))
-
-    distances = list(map(get_first_distance, matches))
-
-    distance_threshold = 50
-
-    confident_matches = [m for m, n in matches
-                         if m.distance < 0.75 * n.distance and
-                         m.distance < 30]
-
-    get_matching_file = compose(
-        partitions.get_value,
-        op.attrgetter('trainIdx')
-    )
-
-    votes = list(map(get_matching_file, confident_matches))
-
-    frequencies = collections.Counter(votes).most_common()
-
-    results = sorted(frequencies, key=op.itemgetter(1))[::-1]
 
     return results
 
@@ -108,7 +60,10 @@ def search_file(file, index_file):
 
     image = cv2.imread(file, 0)
     star = cv2.xfeatures2d.StarDetector_create()
-    keypoints = star.detect(image)
+    detector = cv2.MSER_create()
+    detector = cv2.xfeatures2d.SIFT_create(contrastThreshold=0.12)
+    keypoints = detector.detect(image)
+    print('keypoints', len(keypoints))
     query_keypoint_signatures = compute_keypoint_signatures(image, keypoints)
     return search(query_keypoint_signatures, index_file)
 

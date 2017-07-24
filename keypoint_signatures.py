@@ -2,16 +2,20 @@ from sklearn.neighbors import NearestNeighbors
 import numpy as np
 import sys
 import cv2
+from matplotlib import pyplot as plt
 from functools import partial as p
 
 DESCRIPTOR_SIZE = 16
 
 
 def compute_neighbor_means(keypoint_coordinates):
-    nearest_neighbors = NearestNeighbors(n_neighbors=11)
+    if len(keypoint_coordinates) == 0:
+        return []
+
+    nearest_neighbors = NearestNeighbors(n_neighbors=min(len(keypoint_coordinates), 11))
     nearest_neighbors.fit(keypoint_coordinates)
-    indexes_by_keypoints = nearest_neighbors.kneighbors(keypoint_coordinates, return_distance=False)[1:]
-    neighbors_by_keypoints = [[keypoint_coordinates[index] for index in indexes] for indexes in indexes_by_keypoints]
+    indexes_by_keypoints = nearest_neighbors.kneighbors(keypoint_coordinates, return_distance=False)
+    neighbors_by_keypoints = [[keypoint_coordinates[index] for index in indexes[1:]] for indexes in indexes_by_keypoints]
     means_by_keypoint = [np.mean(neighbors, axis=0, dtype=int) for neighbors in neighbors_by_keypoints]
     return means_by_keypoint
 
@@ -43,12 +47,12 @@ def compute_surrounding_distances(center, vector, image):
 
     distances = [compute_difference(center_descriptor, surrounding_descriptor)
                  for surrounding_descriptor in surrounding_descriptors]
-    return distances
+    return tuple(distances)
 
 
 def compute_difference(descriptor1, descriptor2):
     if descriptor1 is None or descriptor2 is None:
-        return sys.maxsize
+        return DESCRIPTOR_SIZE * 8
 
     return cv2.norm(descriptor1, descriptor2, normType=cv2.HAMMING_NORM_TYPE)
 
@@ -70,10 +74,15 @@ def compute_normalizer(distances, n_levels=5):
 def normalize_distances(distances):
     normalizer = compute_normalizer(distances)
 
-    return list(map(normalizer, distances))
+    return tuple(map(normalizer, distances))
 
 
 def compute_keypoint_signatures(image, keypoints):
+    image_with_keypoints = cv2.drawKeypoints(image, keypoints, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS, outImage=None)
+
+    plt.imshow(image_with_keypoints)
+    plt.show()
+
     keypoint_coordinates = [np.array(keypoint.pt) for keypoint in keypoints]
     means_by_keypoint = compute_neighbor_means(keypoint_coordinates)
 
